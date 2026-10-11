@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GDG Teknoloji Tabu</title>
+  <style>
+    :root {
+      --google-blue: #4285F4;
+      --google-red: #EA4335;
+      --google-yellow: #FBBC05;
+      --google-green: #34A853;
+      --dark-text: #202124;
+      --light-bg: #f8f9fa;
+      --card-bg: #ffffff;
+      --border-color: #dadce0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--light-bg);
+      color: var(--dark-text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 440px;
+      perspective: 1000px;
+    }
+
+    .view-screen {
+      display: none;
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 28px 24px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      border: 1px solid var(--border-color);
+      text-align: center;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    .view-screen.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* GDG Renk Şeridi */
+    .color-strip {
+      display: flex;
+      height: 6px;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .strip-segment { flex: 1; }
+    .strip-blue { background: var(--google-blue); }
+    .strip-red { background: var(--google-red); }
+    .strip-yellow { background: var(--google-yellow); }
+    .strip-green { background: var(--google-green); }
+
+    /* Tipografi */
+    h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--dark-text);
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #5f6368;
+      margin-bottom: 24px;
+    }
+
+    /* Başlangıç Ekranı */
+    .rule-box {
+      background: #f1f3f4;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: left;
+      margin-bottom: 24px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #3c4043;
+    }
+    .rule-box ul {
+      margin-left: 18px;
+    }
+
+    .time-selector-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #5f6368;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+    }
+
+    .time-options {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .time-btn {
+      flex: 1;
+      padding: 10px;
+      background: #ffffff;
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 15px;
+      color: #5f6368;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .time-btn.active {
+      border-color: var(--google-blue);
+      color: var(--google-blue);
+      background: #e8f0fe;
+    }
+
+    /* Oyun Göstergeleri */
+    .game-hud {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      font-weight: 700;
+    }
+
+    .timer-badge {
+      font-size: 24px;
+      font-variant-numeric: tabular-nums;
+      color: #202124;
+      background: #e8f0fe;
+      padding: 6px 14px;
+      border-radius: 10px;
+      min-width: 80px;
+      border: 1px solid #d2e3fc;
+    }
+
+    .timer-badge.warning {
+      color: var(--google-red);
+      background: #fce8e6;
+      border-color: #fad2cf;
+      animation: pulse 1s infinite alternate;
+    }
+
+    @keyframes pulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.05); }
+    }
+
+    .score-badge {
+      font-size: 16px;
+      color: var(--google-green);
+      background: #e6f4ea;
+      padding: 6px 14px;
+      border-radius: 10px;
+      border: 1px solid #ceead6;
+    }
+
+    /* Süre Çubuğu */
+    .progress-bar-container {
+      width: 100%;
+      height: 6px;
+      background: #e8eaed;
+      border-radius: 3px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 100%;
+      background: var(--google-blue);
+      transition: width 1s linear, background-color 0.3s;
+    }
+
+    /* Tabu Kartı */
+    .taboo-card {
+      border: 2px solid var(--border-color);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      background: #fafafa;
+    }
+
+    .target-word {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--google-blue);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px dashed #dadce0;
+      word-break: break-word;
+    }
+
+    .forbidden-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--google-red);
+      margin-bottom: 12px;
+    }
+
+    .forbidden-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .forbidden-item {
+      background: #ffffff;
+      border: 1px solid #fce8e6;
+      color: #c5221f;
+      font-weight: 600;
+      font-size: 16px;
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    /* Kontrol Butonları */
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1.2fr;
+      gap: 8px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 14px 10px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-key {
+      font-size: 10px;
+      font-weight: 400;
+      opacity: 0.8;
+      text-transform: uppercase;
+    }
+
+    .btn-taboo {
+      background: #fce8e6;
+      color: var(--google-red);
+      border: 1px solid #fad2cf;
+    }
+
+    .btn-skip {
+      background: #e8eaed;
+      color: #3c4043;
+    }
+
+    .btn-correct {
+      background: var(--google-green);
+      color: #ffffff;
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: var(--google-blue);
+      color: #ffffff;
+      padding: 16px;
+      font-size: 16px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+      transition: background 0.2s;
+    }
+    .btn-primary:hover {
+      background: #1a73e8;
+    }
+
+    /* Sonuç Ekranı */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: #f8f9fa;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 14px 6px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--dark-text);
+      margin-bottom: 4px;
+    }
+
+    .stat-name {
+      font-size: 11px;
+      color: #5f6368;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .score-summary {
+      font-size: 40px;
+      font-weight: 900;
+      color: var(--google-green);
+      margin: 12px 0 20px 0;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- BAŞLANGIÇ EKRANI -->
+  <div id="start-screen" class="view-screen active">
+    <div class="color-strip">
+      <div class="strip-segment strip-blue"></div>
+      <div class="strip-segment strip-red"></div>
+      <div class="strip-segment strip-yellow"></div>
+      <div class="strip-segment strip-green"></div>
+    </div>
+
+    <h1>Taboo GDGoC Çankaya Edition</h1>
+    <div class="subtitle">Kampüs Tanıtım Günü Özel</div>
+
+    <div class="rule-box">
+      <ul>
+        <li>Ana kelimeyi aşağıdaki 5 yasaklı kelimeyi kullanmadan anlatın.</li>
+        <li>Kelimenin baş harflerini söylemek, kökünü kullanmak veya ses benzetmesi yapmak yasaktır.</li>
+        <li>Cihazı sadece anlatan kişi görmelidir; tahmin edenler ekrana bakmamalıdır.</li>
+      </ul>
+    </div>
+
+    <div class="time-selector-label">Tur Süresi</div>
+    <div class="time-options">
+      <button class="time-btn" onclick="selectDuration(45)">45 sn</button>
+      <button class="time-btn active" onclick="selectDuration(60)">60 sn</button>
+      <button class="time-btn" onclick="selectDuration(90)">90 sn</button>
+    </div>
+
+    <button class="btn-primary" onclick="startGame()">Oyunu Başlat</button>
+  </div>
+
+  <!-- OYUN EKRANI -->
+  <div id="game-screen" class="view-screen">
+    <div class="game-hud">
+      <div class="timer-badge" id="timer-display">60</div>
+      <div class="score-badge" id="score-display">Puan: 0</div>
+    </div>
+
+    <div class="progress-bar-container">
+      <div class="progress-bar-fill" id="progress-bar"></div>
+    </div>
+
+    <div class="taboo-card">
+      <div class="target-word" id="target-word">---</div>
+      <div class="forbidden-label">Yasaklı Kelimeler</div>
+      <ul class="forbidden-list" id="forbidden-list">
+        <li class="forbidden-item">---</li>
+        <li class="forbidden-item">---</li>
+        <li class="forbidden-item">---</li>
+        <li class="forbidden-item">---</li>
+        <li class="forbidden-item">---</li>
+      </ul>
+    </div>
+
+    <div class="action-grid">
+      <button class="btn btn-taboo" onclick="triggerTaboo()">
+        <span>Tabu (-1)</span>
+        <span class="btn-key">[B] Tuşu</span>
+      </button>
+      <button class="btn btn-skip" onclick="skipCard()">
+        <span>Pas</span>
+        <span class="btn-key">[Aşağı Ok]</span>
+      </button>
+      <button class="btn btn-correct" onclick="correctCard()">
+        <span>Doğru (+1)</span>
+        <span class="btn-key">[Boşluk]</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- SONUÇ EKRANI -->
+  <div id="results-screen" class="view-screen">
+    <div class="color-strip">
+      <div class="strip-segment strip-blue"></div>
+      <div class="strip-segment strip-red"></div>
+      <div class="strip-segment strip-yellow"></div>
+      <div class="strip-segment strip-green"></div>
+    </div>
+
+    <h1>Süre Bitti</h1>
+    <div class="subtitle">Tur Tamamlandı</div>
+
+    <div class="score-summary" id="final-score">0 PUAN</div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="stat-correct" style="color: var(--google-green)">0</div>
+        <div class="stat-name">Doğru</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-taboo" style="color: var(--google-red)">0</div>
+        <div class="stat-name">Tabu</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-skipped" style="color: #5f6368">0</div>
+        <div class="stat-name">Pas</div>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="resetToStart()">Yeniden Oyna</button>
+  </div>
+</div>
+
+<script>
+  let audioCtx = null;
+
+  function initAudio() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+  }
+
+  function playTone(freq, type, duration) {
+    if (!audioCtx) return;
+    try {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch (e) {}
+  }
+
+  function soundCorrect() {
+    playTone(523.25, 'triangle', 0.1);
+    setTimeout(() => playTone(659.25, 'triangle', 0.15), 80);
+  }
+
+  function soundTaboo() {
+    playTone(130.81, 'sawtooth', 0.35);
+  }
+
+  function soundTick() {
+    playTone(800, 'sine', 0.05);
+  }
+
+  function soundFinish() {
+    playTone(330, 'square', 0.15);
+    setTimeout(() => playTone(260, 'square', 0.4), 160);
+  }
+
+  const rawCards = [
+    // Kampüs & Öğrenci Hayatı
+    { word: "VİZE", forbidden: ["Sınav", "Not", "Ders", "Final", "Çalışmak"] },
+    { word: "KAMPÜS", forbidden: ["Üniversite", "Okul", "Bina", "Öğrenci", "Bahçe"] },
+    { word: "KAHVE", forbidden: ["Uykusuz", "Bardak", "İçmek", "Kafein", "Sabah"] },
+    { word: "KÜTÜPHANE", forbidden: ["Kitap", "Sessiz", "Ders", "Masa", "Çalışmak"] },
+    { word: "YOKLAMA", forbidden: ["İmza", "Hoca", "Kağıt", "Devamsızlık", "Sınıf"] },
+    { word: "ÖDEV", forbidden: ["Hoca", "Teslim", "Proje", "Gece", "Puan"] },
+    { word: "SUNUM", forbidden: ["Slayt", "Tahta", "Anlatmak", "Grup", "Konuşmak"] },
+
+    // Günlük Teknoloji
+    { word: "ŞARJ ALETİ", forbidden: ["Priz", "Kablo", "Batarya", "Telefon", "Yüzde"] },
+    { word: "KULAKLIK", forbidden: ["Müzik", "Ses", "Kulak", "Bluetooth", "Dinlemek"] },
+    { word: "Wİ-Fİ", forbidden: ["İnternet", "Şifre", "Bağlantı", "Modem", "Kablosuz"] },
+    { word: "EKRAN GÖRÜNTÜSÜ", forbidden: ["Fotoğraf", "Telefon", "Kaydetmek", "Tuş", "SS"] },
+    { word: "BİLGİSAYAR", forbidden: ["Laptop", "Klavye", "Ekran", "Fare", "Kasa"] },
+    { word: "ŞİFRE", forbidden: ["Parola", "Giriş", "Gizli", "Hesap", "Karakter"] },
+
+    // Google Ürünleri
+    { word: "YOUTUBE", forbidden: ["Video", "İzlemek", "Kanal", "Abone", "Google"] },
+    { word: "GOOGLE MAPS", forbidden: ["Konum", "Harita", "Yol", "Navigasyon", "Trafik"] },
+    { word: "GMAIL", forbidden: ["E-posta", "Mesaj", "Gelen Kutusu", "Göndermek", "Mail"] },
+    { word: "GOOGLE DRIVE", forbidden: ["Bulut", "Dosya", "Yüklemek", "Klasör", "Depolama"] },
+    { word: "CHROME", forbidden: ["Tarayıcı", "Sekme", "İnternet", "Arama", "Google"] },
+    { word: "ÇEVİRİ", forbidden: ["Dil", "İngilizce", "Türkçe", "Kelime", "Sözlük"] },
+
+    // Temel Yazılım & Topluluk
+    { word: "BUG", forbidden: ["Hata", "Kod", "Çözmek", "Bozuk", "Çalışmıyor"] },
+    { word: "YAPAY ZEKA", forbidden: ["Robot", "Akıllı", "Model", "İnsan", "Gelecek"] },
+    { word: "KODLAMA", forbidden: ["Yazılım", "Program", "Bilgisayar", "Dil", "Geliştirici"] },
+    { word: "SWAG", forbidden: ["Sticker", "Tişört", "Hediye", "Ücretsiz", "Eşya"] },
+    { word: "STAND GÜNÜ", forbidden: ["Masa", "Kulüp", "Üye", "Kayıt", "Topluluk"] },
+    { word: "HACKATHON", forbidden: ["Yarışma", "Kod", "Takım", "24 Saat", "Uykusuz"] },
+
+    // Zor / Teknik Kartlar
+    { word: "FLUTTER", forbidden: ["Dart", "Mobil", "Widget", "Google", "Uygulama"] },
+    { word: "FIREBASE", forbidden: ["Veritabanı", "Backend", "Auth", "Bulut", "Realtime"] },
+    { word: "GIT / GITHUB", forbidden: ["Commit", "Push", "Branch", "Repo", "Merge"] },
+    { word: "TERMINAL", forbidden: ["Komut", "Bash", "Siyah Ekran", "CLI", "Linux"] },
+    { word: "API", forbidden: ["İstek", "Backend", "JSON", "Veri", "Endpoint"] },
+    { word: "RECURSION", forbidden: ["Fonksiyon", "Kendi", "Döngü", "Çağırmak", "Base Case"] }
+  ];
+
+  let deck = [];
+  let cardIndex = 0;
+  let roundDuration = 60;
+  let remainingTime = 60;
+  let timerInterval = null;
+
+  let stats = { correct: 0, taboo: 0, skipped: 0 };
+
+  function shuffle(array) {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function selectDuration(sec) {
+    roundDuration = sec;
+    document.querySelectorAll('.time-btn').forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.textContent.includes(sec + ' sn')) {
+        btn.classList.add('active');
+      }
+    });
+  }
+
+  function showScreen(screenId) {
+    document.querySelectorAll('.view-screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(screenId).classList.add('active');
+  }
+
+  function displayCurrentCard() {
+    if (cardIndex >= deck.length) {
+      deck = shuffle(rawCards);
+      cardIndex = 0;
+    }
+    const card = deck[cardIndex];
+    document.getElementById('target-word').textContent = card.word;
+    const list = document.getElementById('forbidden-list');
+    list.innerHTML = card.forbidden.map(w => `<li class="forbidden-item">${w}</li>`).join('');
+  }
+
+  function updateHUD() {
+    const timerDisplay = document.getElementById('timer-display');
+    timerDisplay.textContent = remainingTime;
+
+    const netScore = stats.correct - stats.taboo;
+    document.getElementById('score-display').textContent = 'Puan: ' + netScore;
+
+    const progress = (remainingTime / roundDuration) * 100;
+    const bar = document.getElementById('progress-bar');
+    bar.style.width = progress + '%';
+
+    if (remainingTime <= 10) {
+      timerDisplay.classList.add('warning');
+      bar.style.backgroundColor = 'var(--google-red)';
+    } else {
+      timerDisplay.classList.remove('warning');
+      bar.style.backgroundColor = 'var(--google-blue)';
+    }
+  }
+
+  function startGame() {
+    initAudio();
+    deck = shuffle(rawCards);
+    cardIndex = 0;
+    remainingTime = roundDuration;
+    stats = { correct: 0, taboo: 0, skipped: 0 };
+
+    displayCurrentCard();
+    updateHUD();
+    showScreen('game-screen');
+
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      remainingTime--;
+      updateHUD();
+
+      if (remainingTime <= 5 && remainingTime > 0) {
+        soundTick();
+      }
+
+      if (remainingTime <= 0) {
+        endGame();
+      }
+    }, 1000);
+  }
+
+  function correctCard() {
+    stats.correct++;
+    soundCorrect();
+    cardIndex++;
+    displayCurrentCard();
+    updateHUD();
+  }
+
+  function triggerTaboo() {
+    stats.taboo++;
+    soundTaboo();
+    cardIndex++;
+    displayCurrentCard();
+    updateHUD();
+  }
+
+  function skipCard() {
+    stats.skipped++;
+    cardIndex++;
+    displayCurrentCard();
+  }
+
+  function endGame() {
+    clearInterval(timerInterval);
+    soundFinish();
+
+    const netScore = Math.max(0, stats.correct - stats.taboo);
+    document.getElementById('final-score').textContent = netScore + ' PUAN';
+    document.getElementById('stat-correct').textContent = stats.correct;
+    document.getElementById('stat-taboo').textContent = stats.taboo;
+    document.getElementById('stat-skipped').textContent = stats.skipped;
+
+    showScreen('results-screen');
+  }
+
+  function resetToStart() {
+    if (timerInterval) clearInterval(timerInterval);
+    showScreen('start-screen');
+  }
+
+  window.addEventListener('keydown', (e) => {
+    const gameScreen = document.getElementById('game-screen');
+    if (!gameScreen.classList.contains('active')) return;
+
+    if (e.code === 'Space' || e.code === 'ArrowRight') {
+      e.preventDefault();
+      correctCard();
+    } else if (e.code === 'ArrowDown') {
+      e.preventDefault();
+      skipCard();
+    } else if (e.code === 'KeyB' || e.code === 'ArrowLeft') {
+      e.preventDefault();
+      triggerTaboo();
+    }
+  });
+</script>
+
+</body>
+</html>
